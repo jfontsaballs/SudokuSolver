@@ -80,8 +80,16 @@ namespace SudokuSolver
 
             return true;
         }
+        public override int GetHashCode()
+        {
+            var hashCode = new HashCode();
+            foreach (var row in sudoku)
+                foreach (var element in row)
+                    hashCode.Add(element);
+            return hashCode.ToHashCode();
+        }
 
-        public static bool operator ==(Sudoku left, Sudoku right) => EqualityComparer<Sudoku>.Default.Equals(left, right);
+        public static bool operator ==(Sudoku left, Sudoku right) => left.Equals(right);
         public static bool operator !=(Sudoku left, Sudoku right) => !(left == right);
     }
 

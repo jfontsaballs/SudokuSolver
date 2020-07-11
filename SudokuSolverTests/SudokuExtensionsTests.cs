@@ -7,7 +7,7 @@ namespace SudokuSolver.Tests
         [Test]
         public void CheckTest()
         {
-            Sudoku sudoku = Sudokus.Facil();
+            Sudoku sudoku = Sudokus.Easy.Sudoku;
 
             Assert.That(sudoku.Check(3, 9, 1));
             Assert.That(!sudoku.Check(3, 9, 2));
