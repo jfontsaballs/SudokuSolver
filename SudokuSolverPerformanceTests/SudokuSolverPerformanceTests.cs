@@ -8,22 +8,33 @@ namespace SudokuSolverPerformanceTests
 {
     public class SudokuSolverPerformanceTests
     {
-        [Benchmark]
-        public Sudoku BruteForceSolver_Facil() => BruteForceSolver.Solve(Sudokus.Easy.Sudoku);
+        private CombinationSudokuSolver CombinationSolver => new CombinationSudokuSolver(new SinglePossibilitySolverStrategy(), new BruteForceSolverStrategy());
 
         [Benchmark]
-        public Sudoku BruteForceSolver_Intermedi() => BruteForceSolver.Solve(Sudokus.Intermediate.Sudoku);
+        public Sudoku BruteForceSolver_Facil() => new BruteForceSolverStrategy().Solve(Sudokus.Easy.Sudoku);
 
         [Benchmark]
-        public Sudoku BruteForceSolver_Dificil() => BruteForceSolver.Solve(Sudokus.Difficult.Sudoku);
+        public Sudoku BruteForceSolver_Intermedi() => new BruteForceSolverStrategy().Solve(Sudokus.Intermediate.Sudoku);
+
+        [Benchmark]
+        public Sudoku BruteForceSolver_Dificil() => new BruteForceSolverStrategy().Solve(Sudokus.Difficult.Sudoku);
        
         [Benchmark]
-        public Sudoku BruteForceSolver_Expert() => BruteForceSolver.Solve(Sudokus.Expert.Sudoku);
+        public Sudoku BruteForceSolver_Expert() => new BruteForceSolverStrategy().Solve(Sudokus.Expert.Sudoku);
 
         [Benchmark]
-        public Sudoku SinglePossibilitySolver_Facil() => new SinglePossibilitySolverStrategy().Solve(Sudokus.Easy.Sudoku);
+        public (Sudoku, ISolverStrategy) SinglePossibilitySolver_Facil() => new SudokuSolver.CombinationSudokuSolver(new SinglePossibilitySolverStrategy()).Solve(Sudokus.Easy.Sudoku);
 
-        static void Main(string[] args)
+        [Benchmark]
+        public (Sudoku, ISolverStrategy) Single_BruteForceSolver_Intermedi() => CombinationSolver.Solve(Sudokus.Intermediate.Sudoku);
+
+        [Benchmark]
+        public (Sudoku, ISolverStrategy) Single_BruteForceSolver_Dificil() => CombinationSolver.Solve(Sudokus.Difficult.Sudoku);
+
+        [Benchmark]
+        public (Sudoku, ISolverStrategy) Single_BruteForceSolver_Expert() => CombinationSolver.Solve(Sudokus.Expert.Sudoku);
+
+        static void Main()
         {
             BenchmarkRunner.Run<SudokuSolverPerformanceTests>();
             Console.ReadLine();

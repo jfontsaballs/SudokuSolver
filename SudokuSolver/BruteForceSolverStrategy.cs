@@ -2,9 +2,9 @@
 
 namespace SudokuSolver
 {
-    public class BruteForceSolver
+    public class BruteForceSolverStrategy : ISolverStrategy
     {
-        public static Sudoku Solve(Sudoku sudoku) => solve(sudoku, 0);
+        public Sudoku Solve(Sudoku sudoku) => solve(sudoku, 0);
 
         private static Sudoku solve(Sudoku sudoku, int i)
         {

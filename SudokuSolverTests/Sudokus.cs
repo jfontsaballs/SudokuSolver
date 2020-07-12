@@ -96,6 +96,13 @@ namespace SudokuSolver.Tests
         public static void TestSudoku((Sudoku Sudoku, Sudoku Solved) sudoku, Func<Sudoku, Sudoku> solver)
             => Assert.That(solver(sudoku.Sudoku), Is.EqualTo(sudoku.Solved));
 
+        public static void TestSudoku((Sudoku Sudoku, Sudoku Solved) solvedSudoku, ISolverStrategy expectedStrategy, Func<Sudoku, (Sudoku, ISolverStrategy)> solver)
+        {
+            var (solution, strategy) = solver(solvedSudoku.Sudoku);
+            Assert.That(solution, Is.EqualTo(solvedSudoku.Solved));
+            Assert.That(strategy, Is.EqualTo(expectedStrategy));
+        }
+
         public static void TestSudokus(Func<Sudoku, Sudoku> solver)
         {
             TestSudoku(Easy, solver);

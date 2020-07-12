@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
@@ -10,13 +9,28 @@ namespace SudokuSolver
     {
         public static int x = 0;
 
-        private readonly ImmutableArray<ImmutableArray<int>> sudoku;
+        public int this[int fila, int columna] => Rows[fila - 1][columna - 1];
 
-        public int this[int fila, int columna] => sudoku[fila - 1][columna - 1];
+        public ImmutableArray<ImmutableArray<int>> Rows { get; }
+        public ImmutableArray<ImmutableArray<int>> Columns 
+            => Enumerable.Range(0, 9)
+                .Select(i => Rows.Select(x => x[i]).ToImmutableArray())
+                .ToImmutableArray();
+        public ImmutableArray<ImmutableArray<int>> Squares
+            => Enumerable.Range(0, 9)
+                .Select(i => {
+                    var(qx, qy) = (i % 3 * 3, i / 3 * 3);
+                    return Rows
+                        .Skip(qx)
+                        .Take(3)
+                        .SelectMany(row => row.Skip(qy).Take(3))
+                        .ToImmutableArray();
+                }).ToImmutableArray();
+
 
         public Sudoku(params int[] values)
         {
-            sudoku = values
+            Rows = values
                 .Select((v, i) => (v, i))
                 .GroupBy(x => x.i / 9)
                 .Select(g => g.Select(x => x.v).ToImmutableArray())
@@ -25,17 +39,17 @@ namespace SudokuSolver
 
         private Sudoku(ImmutableArray<ImmutableArray<int>> sudoku)
         {
-            this.sudoku = sudoku;
+            this.Rows = sudoku;
         }
 
         public Sudoku Set(int fila, int columna, int valor)
         {
             var (x, y) = getCoordenades(fila, columna);
-            if (sudoku[x][y] != 0)
+            if (Rows[x][y] != 0)
                 throw new Exception("Aquesta posició ja està ocupada");
             if (!this.Check(fila, columna, valor))
                 throw new Exception("Aquest valor no és correcte per aquesta posició");
-            return new Sudoku(sudoku.SetItem(x, sudoku[x].SetItem(y, valor)));
+            return new Sudoku(Rows.SetItem(x, Rows[x].SetItem(y, valor)));
         }
 
         public (ImmutableArray<int> fila, ImmutableArray<int> columna, ImmutableArray<int> quadrat)
@@ -44,11 +58,11 @@ namespace SudokuSolver
             var (x, y) = getCoordenades(fila, columna);
             var (qx, qy) = (x / 3 * 3, y / 3 * 3);
             return (
-                sudoku[x],
-                sudoku
+                Rows[x],
+                Rows
                     .Select(f => f[y])
                     .ToImmutableArray(),
-                sudoku.Skip(qx)
+                Rows.Skip(qx)
                     .Take(3)
                     .SelectMany(row => row.Skip(qy).Take(3))
                     .ToImmutableArray());
@@ -62,7 +76,7 @@ namespace SudokuSolver
             for (int i = 0; i < 9; i++) {
                 sb.AppendLine();
                 for (int j = 0; j < 9; j++)
-                    sb.Append($"{sudoku[i][j]}, ");
+                    sb.Append($"{Rows[i][j]}, ");
             }
             return sb.ToString(0, sb.Length - 2);
         }
@@ -83,13 +97,13 @@ namespace SudokuSolver
         public override int GetHashCode()
         {
             var hashCode = new HashCode();
-            foreach (var row in sudoku)
+            foreach (var row in Rows)
                 foreach (var element in row)
                     hashCode.Add(element);
             return hashCode.ToHashCode();
         }
 
-        public static bool operator ==(Sudoku left, Sudoku right) => left.Equals(right);
+        public static bool operator ==(Sudoku left, Sudoku right) => left?.Equals(right) == true;
         public static bool operator !=(Sudoku left, Sudoku right) => !(left == right);
     }
 
