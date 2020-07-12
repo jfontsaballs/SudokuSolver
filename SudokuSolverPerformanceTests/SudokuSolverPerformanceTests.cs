@@ -20,6 +20,9 @@ namespace SudokuSolverPerformanceTests
         [Benchmark]
         public Sudoku BruteForceSolver_Expert() => BruteForceSolver.Solve(Sudokus.Expert.Sudoku);
 
+        [Benchmark]
+        public Sudoku SinglePossibilitySolver_Facil() => new SinglePossibilitySolverStrategy().Solve(Sudokus.Easy.Sudoku);
+
         static void Main(string[] args)
         {
             BenchmarkRunner.Run<SudokuSolverPerformanceTests>();

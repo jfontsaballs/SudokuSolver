@@ -100,5 +100,18 @@ namespace SudokuSolver
             var (f, c, q) = sudoku.Get(fila, columna);
             return f.All(x => x != valor) && c.All(x => x != valor) && q.All(x => x != valor);
         }
+
+        public static Sudoku ForEachEmpty(this Sudoku sudoku, Func<int, int, ImmutableArray<int>, ImmutableArray<int>, ImmutableArray<int>, int> action)
+        {
+            for (int i = 1; i <= 9; i++)
+                for (int j = 1; j <= 9; j++)
+                    if (sudoku[i, j] == 0) {
+                        var (f, c, q) = sudoku.Get(i, j);
+                        var newValue = action(i, j, f, c, q);
+                        if (newValue != 0)
+                            sudoku = sudoku.Set(i, j, newValue);
+                    }
+            return sudoku;
+        }
     }
 }

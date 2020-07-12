@@ -9,6 +9,11 @@ namespace SudokuSolver.Tests
         {
             Sudokus.TestSudokus(BruteForceSolver.Solve);
         }
+
+        [Test]
+        public void SinglePossibilitySolverTest()
+        {
+            Sudokus.TestSudoku(Sudokus.Easy, SinglePossibilitySolver.Solve);
         }
     }
 }
