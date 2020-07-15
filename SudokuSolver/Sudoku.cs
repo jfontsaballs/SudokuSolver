@@ -1,36 +1,25 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 
 namespace SudokuSolver
 {
-    public class Sudoku : IEquatable<Sudoku>
+    public class Sudoku : IEquatable<Sudoku>, IEnumerable<int>
     {
-        public static int x = 0;
+        private readonly ImmutableArray<ImmutableArray<int>> sudoku;
 
-        public int this[int fila, int columna] => Rows[fila - 1][columna - 1];
+        public int this[int fila, int columna] => sudoku[fila - 1][columna - 1];
 
-        public ImmutableArray<ImmutableArray<int>> Rows { get; }
-        public ImmutableArray<ImmutableArray<int>> Columns 
-            => Enumerable.Range(0, 9)
-                .Select(i => Rows.Select(x => x[i]).ToImmutableArray())
-                .ToImmutableArray();
-        public ImmutableArray<ImmutableArray<int>> Squares
-            => Enumerable.Range(0, 9)
-                .Select(i => {
-                    var(qx, qy) = (i % 3 * 3, i / 3 * 3);
-                    return Rows
-                        .Skip(qx)
-                        .Take(3)
-                        .SelectMany(row => row.Skip(qy).Take(3))
-                        .ToImmutableArray();
-                }).ToImmutableArray();
-
+        public ImmutableArray<int> Row(int position) => sudoku.Row(position);
+        public ImmutableArray<int> Column(int position) => sudoku.Column(position);
+        public ImmutableArray<int> Square(int position) => sudoku.Square(position);
 
         public Sudoku(params int[] values)
         {
-            Rows = values
+            sudoku = values
                 .Select((v, i) => (v, i))
                 .GroupBy(x => x.i / 9)
                 .Select(g => g.Select(x => x.v).ToImmutableArray())
@@ -39,17 +28,17 @@ namespace SudokuSolver
 
         private Sudoku(ImmutableArray<ImmutableArray<int>> sudoku)
         {
-            this.Rows = sudoku;
+            this.sudoku = sudoku;
         }
 
         public Sudoku Set(int fila, int columna, int valor)
         {
             var (x, y) = getCoordenades(fila, columna);
-            if (Rows[x][y] != 0)
+            if (sudoku[x][y] != 0)
                 throw new Exception("Aquesta posició ja està ocupada");
             if (!this.Check(fila, columna, valor))
                 throw new Exception("Aquest valor no és correcte per aquesta posició");
-            return new Sudoku(Rows.SetItem(x, Rows[x].SetItem(y, valor)));
+            return new Sudoku(sudoku.SetItem(x, sudoku[x].SetItem(y, valor)));
         }
 
         public (ImmutableArray<int> fila, ImmutableArray<int> columna, ImmutableArray<int> quadrat)
@@ -58,11 +47,11 @@ namespace SudokuSolver
             var (x, y) = getCoordenades(fila, columna);
             var (qx, qy) = (x / 3 * 3, y / 3 * 3);
             return (
-                Rows[x],
-                Rows
+                sudoku[x],
+                sudoku
                     .Select(f => f[y])
                     .ToImmutableArray(),
-                Rows.Skip(qx)
+                sudoku.Skip(qx)
                     .Take(3)
                     .SelectMany(row => row.Skip(qy).Take(3))
                     .ToImmutableArray());
@@ -76,7 +65,7 @@ namespace SudokuSolver
             for (int i = 0; i < 9; i++) {
                 sb.AppendLine();
                 for (int j = 0; j < 9; j++)
-                    sb.Append($"{Rows[i][j]}, ");
+                    sb.Append($"{sudoku[i][j]}, ");
             }
             return sb.ToString(0, sb.Length - 2);
         }
@@ -97,11 +86,14 @@ namespace SudokuSolver
         public override int GetHashCode()
         {
             var hashCode = new HashCode();
-            foreach (var row in Rows)
+            foreach (var row in sudoku)
                 foreach (var element in row)
                     hashCode.Add(element);
             return hashCode.ToHashCode();
         }
+
+        public IEnumerator<int> GetEnumerator() => sudoku.SelectMany(x => x).GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         public static bool operator ==(Sudoku left, Sudoku right) => left?.Equals(right) == true;
         public static bool operator !=(Sudoku left, Sudoku right) => !(left == right);
@@ -115,17 +107,41 @@ namespace SudokuSolver
             return f.All(x => x != valor) && c.All(x => x != valor) && q.All(x => x != valor);
         }
 
-        public static Sudoku ForEachEmpty(this Sudoku sudoku, Func<int, int, ImmutableArray<int>, ImmutableArray<int>, ImmutableArray<int>, int> action)
+        public static Sudoku ForEachEmpty(this Sudoku sudoku, Func<int, int, int> action)
         {
-            for (int i = 1; i <= 9; i++)
-                for (int j = 1; j <= 9; j++)
+            ForEachPosition(i =>
+                ForEachPosition(j => {
                     if (sudoku[i, j] == 0) {
-                        var (f, c, q) = sudoku.Get(i, j);
-                        var newValue = action(i, j, f, c, q);
+                        var newValue = action(i, j);
                         if (newValue != 0)
                             sudoku = sudoku.Set(i, j, newValue);
                     }
+                }));
             return sudoku;
+        }
+
+        public static ImmutableArray<T> Row<T>(this ImmutableArray<ImmutableArray<T>> square, int rowNumber)
+            => square[rowNumber - 1];
+
+        public static ImmutableArray<T> Column<T>(this ImmutableArray<ImmutableArray<T>> square, int columnNumber)
+            => square.Select(row => row[columnNumber - 1]).ToImmutableArray();
+
+        public static ImmutableArray<T> Square<T>(this ImmutableArray<ImmutableArray<T>> square, int squarePosition)
+        {
+            var squareIndex = squarePosition - 1;
+            var squareStartX = squareIndex / 3 * 3;
+            var squareStartY = squareIndex % 3 * 3;
+            return square
+                .Skip(squareStartX)
+                .Take(3)
+                .SelectMany(row => row.Skip(squareStartY).Take(3))
+                .ToImmutableArray();
+        }
+
+        public static void ForEachPosition(Action<int> action)
+        {
+            for (int i = 1; i <= 9; i++)
+                action(i);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace SudokuSolver
 {
@@ -6,14 +7,20 @@ namespace SudokuSolver
     {
         public Sudoku Solve(Sudoku sudoku)
         {
-            return sudoku.ForEachEmpty((_, __, f, c, q) => {
+            return sudoku.ForEachEmpty((f, q) => {
                 try {
-                    return Enumerable.Range(1, 9).Except(f.Union(c).Union(q)).Single();
+                    return GetPossibilities(sudoku, f, q).Single();
                 }
                 catch {
                     return 0;
                 }
             });
+        }
+
+        public static IEnumerable<int> GetPossibilities(Sudoku sudoku, int fila, int columna)
+        {
+            var (f, c, q) = sudoku.Get(fila, columna);
+            return Enumerable.Range(1, 9).Except(f.Union(c).Union(q));
         }
     }
 }

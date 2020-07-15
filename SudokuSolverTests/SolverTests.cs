@@ -20,14 +20,16 @@ namespace SudokuSolver.Tests
         public void SolverTest()
         {
             var singlePossibilitySolverStrategy = new SinglePossibilitySolverStrategy();
+            var singlePlaceSolverStrategy = new SinglePlaceSolverStrategy();
             var bruteForceSolverStrategy = new BruteForceSolverStrategy();
             var solver = new CombinationSudokuSolver(
                 singlePossibilitySolverStrategy,
+                singlePlaceSolverStrategy,
                 bruteForceSolverStrategy);
 
             Sudokus.TestSudoku(Sudokus.Easy, singlePossibilitySolverStrategy, solver.Solve);
-            Sudokus.TestSudoku(Sudokus.Intermediate, bruteForceSolverStrategy, solver.Solve);
-            Sudokus.TestSudoku(Sudokus.Difficult, bruteForceSolverStrategy, solver.Solve);
+            Sudokus.TestSudoku(Sudokus.Intermediate, singlePlaceSolverStrategy, solver.Solve);
+            Sudokus.TestSudoku(Sudokus.Difficult, singlePlaceSolverStrategy, solver.Solve);
             Sudokus.TestSudoku(Sudokus.Expert, bruteForceSolverStrategy, solver.Solve);
         }
     }
