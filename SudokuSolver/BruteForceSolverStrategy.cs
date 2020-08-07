@@ -15,9 +15,9 @@ namespace SudokuSolver
             else if (sudoku[fila, columna] > 0)
                 return solve(sudoku, i + 1);
             else
-                for (int j = 1; j <= 9; j++)
+                foreach(var p in sudoku.Possibilities.Get(fila, columna))
                     try {
-                        var solucio = solve(sudoku.Set(fila, columna, j), i + 1);
+                        var solucio = solve(sudoku.Set(fila, columna, p), i + 1);
                         return solucio;
                     }
                     catch {
