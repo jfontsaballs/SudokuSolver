@@ -1,21 +1,25 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 
+using static SudokuSolver.SudokuUtils;
+
 namespace SudokuSolver
 {
-    public class Sudoku : IEquatable<Sudoku>, IEnumerable<int>
+    public partial class Sudoku : IEquatable<Sudoku>
     {
         private readonly ImmutableArray<ImmutableArray<int>> sudoku;
 
-        public int this[int fila, int columna] => sudoku[fila - 1][columna - 1];
+        public int this[int fila, int columna] => sudoku.Get(fila, columna);
 
         public ImmutableArray<int> Row(int position) => sudoku.Row(position);
         public ImmutableArray<int> Column(int position) => sudoku.Column(position);
         public ImmutableArray<int> Square(int position) => sudoku.Square(position);
+        public Sudoku ForEachPosition(Action<int, int, int, Action<int>> action) => new Sudoku(sudoku.ForEachPosition(action));
+        public void ForEachPosition(Action<int, int, int> action) => sudoku.ForEachPosition(action);
+        public IEnumerable<(int Fila, int Columna, int Valor)> GetAllPositions() => sudoku.GetAllPositions();
 
         public Sudoku(params int[] values)
         {
@@ -26,47 +30,34 @@ namespace SudokuSolver
                 .ToImmutableArray();
         }
 
-        private Sudoku(ImmutableArray<ImmutableArray<int>> sudoku)
+        protected Sudoku(ImmutableArray<ImmutableArray<int>> sudoku)
         {
             this.sudoku = sudoku;
         }
 
-        public Sudoku Set(int fila, int columna, int valor)
+        public virtual Sudoku Set(int fila, int columna, int valor)
         {
-            var (x, y) = getCoordenades(fila, columna);
-            if (sudoku[x][y] != 0)
+            if (this[fila, columna] != 0)
                 throw new Exception("Aquesta posició ja està ocupada");
             if (!this.Check(fila, columna, valor))
                 throw new Exception("Aquest valor no és correcte per aquesta posició");
-            return new Sudoku(sudoku.SetItem(x, sudoku[x].SetItem(y, valor)));
+            return new Sudoku(sudoku.Set(fila, columna, valor));
         }
 
         public (ImmutableArray<int> fila, ImmutableArray<int> columna, ImmutableArray<int> quadrat)
-            Get(int fila, int columna)
-        {
-            var (x, y) = getCoordenades(fila, columna);
-            var (qx, qy) = (x / 3 * 3, y / 3 * 3);
-            return (
-                sudoku[x],
-                sudoku
-                    .Select(f => f[y])
-                    .ToImmutableArray(),
-                sudoku.Skip(qx)
-                    .Take(3)
-                    .SelectMany(row => row.Skip(qy).Take(3))
-                    .ToImmutableArray());
-        }
-
-        private (int x, int y) getCoordenades(int fila, int columna) => (fila - 1, columna - 1);
+            Get(int fila, int columna) => (
+                sudoku.Row(fila),
+                sudoku.Column(columna),
+                sudoku.Square(fila, columna));
 
         public override string ToString()
         {
             var sb = new StringBuilder();
-            for (int i = 0; i < 9; i++) {
+            For1To9(f => {
                 sb.AppendLine();
-                for (int j = 0; j < 9; j++)
-                    sb.Append($"{sudoku[i][j]}, ");
-            }
+                For1To9(c =>
+                    sb.Append($"{sudoku.Get(f, c)}, "));
+            });
             return sb.ToString(0, sb.Length - 2);
         }
 
@@ -76,13 +67,9 @@ namespace SudokuSolver
             if (other is null)
                 return false;
 
-            for (int i = 1; i <= 9; i++)
-                for (int j = 1; j <= 9; j++)
-                    if (this[i, j] != other[i, j])
-                        return false;
-
-            return true;
+            return sudoku.GetAllPositions().All(p => this[p.Fila, p.Columna] == other[p.Fila, p.Columna]);
         }
+
         public override int GetHashCode()
         {
             var hashCode = new HashCode();
@@ -91,9 +78,6 @@ namespace SudokuSolver
                     hashCode.Add(element);
             return hashCode.ToHashCode();
         }
-
-        public IEnumerator<int> GetEnumerator() => sudoku.SelectMany(x => x).GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         public static bool operator ==(Sudoku left, Sudoku right) => left?.Equals(right) == true;
         public static bool operator !=(Sudoku left, Sudoku right) => !(left == right);
@@ -108,37 +92,69 @@ namespace SudokuSolver
         }
 
         public static Sudoku ForEachEmpty(this Sudoku sudoku, Func<int, int, int> action)
-        {
-            ForEachPosition(i =>
-                ForEachPosition(j => {
-                    if (sudoku[i, j] == 0) {
-                        var newValue = action(i, j);
-                        if (newValue != 0)
-                            sudoku = sudoku.Set(i, j, newValue);
-                    }
-                }));
-            return sudoku;
-        }
+            => sudoku.ForEachPosition((i, j, value, setter) => {
+                if (sudoku[i, j] == 0) {
+                    var newValue = action(i, j);
+                    if (newValue != 0)
+                        setter(newValue);
+                }
+            });
+    }
 
-        public static ImmutableArray<T> Row<T>(this ImmutableArray<ImmutableArray<T>> square, int rowNumber)
-            => square[rowNumber - 1];
+    public static class ArrayOfArrayExtensions
+    {
+        public static T Get<T>(this ImmutableArray<ImmutableArray<T>> twoDimensionalArray, int fila, int columna)
+            => twoDimensionalArray[fila - 1][columna - 1];
 
-        public static ImmutableArray<T> Column<T>(this ImmutableArray<ImmutableArray<T>> square, int columnNumber)
-            => square.Select(row => row[columnNumber - 1]).ToImmutableArray();
+        public static ImmutableArray<ImmutableArray<T>> Set<T>(this ImmutableArray<ImmutableArray<T>> twoDimensionalArray, int fila, int columna, T item)
+            => twoDimensionalArray.SetItem(fila - 1, twoDimensionalArray[fila - 1].SetItem(columna - 1, item)); 
 
-        public static ImmutableArray<T> Square<T>(this ImmutableArray<ImmutableArray<T>> square, int squarePosition)
-        {
-            var squareIndex = squarePosition - 1;
-            var squareStartX = squareIndex / 3 * 3;
-            var squareStartY = squareIndex % 3 * 3;
-            return square
+        public static ImmutableArray<T> Row<T>(this ImmutableArray<ImmutableArray<T>> twoDimensionalArray, int rowNumber)
+            => twoDimensionalArray[rowNumber - 1];
+
+        public static ImmutableArray<T> Column<T>(this ImmutableArray<ImmutableArray<T>> twoDimensionalArray, int columnNumber)
+            => twoDimensionalArray.Select(row => row[columnNumber - 1]).ToImmutableArray();
+
+        public static ImmutableArray<T> Square<T>(this ImmutableArray<ImmutableArray<T>> twoDimensionalArray, int squarePosition)
+            => extractSquare(twoDimensionalArray, squareStartX: (squarePosition - 1) / 3 * 3, squareStartY: (squarePosition - 1) % 3 * 3);
+
+        public static ImmutableArray<T> Square<T>(this ImmutableArray<ImmutableArray<T>> twoDimensionalArray, int fila, int columna)
+            => extractSquare(twoDimensionalArray, squareStartX: (fila - 1) / 3 * 3, squareStartY: (columna - 1) / 3 * 3);
+
+        private static ImmutableArray<T> extractSquare<T>(ImmutableArray<ImmutableArray<T>> twoDimensionalArray, int squareStartX, int squareStartY)
+            // Square distribution in array
+            // 0 1 2
+            // 3 4 5
+            // 6 7 8
+            => twoDimensionalArray
                 .Skip(squareStartX)
                 .Take(3)
                 .SelectMany(row => row.Skip(squareStartY).Take(3))
                 .ToImmutableArray();
+
+        public static IEnumerable<(int Fila, int Columna, T Valor)> GetAllPositions<T>(this ImmutableArray<ImmutableArray<T>> twoDimensionalArray)
+        {
+            for (int i = 0; i < twoDimensionalArray.Length; i++)
+                for (int j = 0; j < twoDimensionalArray.Length; j++)
+                    yield return (i + 1, j + 1, twoDimensionalArray[i][j]);
         }
 
-        public static void ForEachPosition(Action<int> action)
+        public static ImmutableArray<ImmutableArray<T>> ForEachPosition<T>(this ImmutableArray<ImmutableArray<T>> twoDimensionalArray, Action<int, int, T, Action<T>> action)
+        {
+            foreach (var (fila, columna, valor) in twoDimensionalArray.GetAllPositions()) {
+                void setter(T newItem) => twoDimensionalArray = twoDimensionalArray.Set(fila, columna, newItem);
+                action(fila, columna, valor, setter);
+            }
+            return twoDimensionalArray;
+        }
+
+        public static void ForEachPosition<T>(this ImmutableArray<ImmutableArray<T>> twoDimensionalArray, Action<int, int, T> action)
+            => twoDimensionalArray.ForEachPosition((i, j, item, setter) => action(i, j, item));
+    }
+
+    public static class SudokuUtils
+    {
+        public static void For1To9(Action<int> action)
         {
             for (int i = 1; i <= 9; i++)
                 action(i);

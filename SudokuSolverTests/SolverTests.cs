@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using System.Linq;
 
 namespace SudokuSolver.Tests
 {
@@ -13,7 +14,9 @@ namespace SudokuSolver.Tests
         [Test]
         public void SinglePossibilitySolverTest()
         {
-            Sudokus.TestSudoku(Sudokus.Easy, sudoku => new CombinationSudokuSolver(new SinglePossibilitySolverStrategy()).Solve(sudoku).Solution);
+            Assert.That(SinglePossibilitySolverStrategy.GetPossibilities(Sudokus.Easy.Sudoku, 7, 8).Single(), Is.EqualTo(7));
+
+            Sudokus.TestSudoku(Sudokus.Easy, new CombinationSudokuSolver(new SinglePossibilitySolverStrategy()).Solve);
         }
 
         [Test]
@@ -27,10 +30,10 @@ namespace SudokuSolver.Tests
                 singlePlaceSolverStrategy,
                 bruteForceSolverStrategy);
 
-            Sudokus.TestSudoku(Sudokus.Easy, singlePossibilitySolverStrategy, solver.Solve);
-            Sudokus.TestSudoku(Sudokus.Intermediate, singlePlaceSolverStrategy, solver.Solve);
-            Sudokus.TestSudoku(Sudokus.Difficult, singlePlaceSolverStrategy, solver.Solve);
-            Sudokus.TestSudoku(Sudokus.Expert, bruteForceSolverStrategy, solver.Solve);
+            Sudokus.TestSudoku(Sudokus.Easy, singlePossibilitySolverStrategy, solver.ExecuteSolve);
+            Sudokus.TestSudoku(Sudokus.Intermediate, singlePlaceSolverStrategy, solver.ExecuteSolve);
+            Sudokus.TestSudoku(Sudokus.Difficult, singlePlaceSolverStrategy, solver.ExecuteSolve);
+            Sudokus.TestSudoku(Sudokus.Expert, bruteForceSolverStrategy, solver.ExecuteSolve);
         }
     }
 }

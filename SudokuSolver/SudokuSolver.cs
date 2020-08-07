@@ -8,7 +8,7 @@ namespace SudokuSolver
         Sudoku Solve(Sudoku sudoku);
     }
 
-    public class CombinationSudokuSolver
+    public class CombinationSudokuSolver : ISolverStrategy
     {
         private readonly ISolverStrategy[] strategies;
 
@@ -17,11 +17,11 @@ namespace SudokuSolver
             this.strategies = strategies;
         }
 
-        public (Sudoku Solution, ISolverStrategy Strategy) Solve(Sudoku sudoku)
+        public (Sudoku Solution, ISolverStrategy Strategy) ExecuteSolve(Sudoku sudoku)
         {
             int maxStrategy = 0;
             for (int c = 0; c < 9999; c++) {
-                if (sudoku.All(x => x != 0))
+                if (sudoku.GetAllPositions().All(x => x.Valor != 0))
                     return (sudoku, strategies[maxStrategy]);
                 else {
                     Sudoku previousSudoku;
@@ -38,5 +38,7 @@ namespace SudokuSolver
 
             throw new Exception("Sudoku has no solution");
         }
+
+        public Sudoku Solve(Sudoku sudoku) => ExecuteSolve(sudoku).Solution;
     }
 }

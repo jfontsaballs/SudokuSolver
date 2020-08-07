@@ -23,16 +23,16 @@ namespace SudokuSolverPerformanceTests
         public Sudoku BruteForceSolver_Expert() => new BruteForceSolverStrategy().Solve(Sudokus.Expert.Sudoku);
 
         [Benchmark]
-        public (Sudoku, ISolverStrategy) SinglePossibilitySolver_Facil() => new SudokuSolver.CombinationSudokuSolver(new SinglePossibilitySolverStrategy()).Solve(Sudokus.Easy.Sudoku);
+        public (Sudoku, ISolverStrategy) SinglePossibilitySolver_Facil() => new SudokuSolver.CombinationSudokuSolver(new SinglePossibilitySolverStrategy()).ExecuteSolve(Sudokus.Easy.Sudoku);
 
         [Benchmark]
-        public (Sudoku, ISolverStrategy) SinglePlaceSolver_Intermedi() => CombinationSolver.Solve(Sudokus.Intermediate.Sudoku);
+        public (Sudoku, ISolverStrategy) SinglePlaceSolver_Intermedi() => CombinationSolver.ExecuteSolve(Sudokus.Intermediate.Sudoku);
 
         [Benchmark]
-        public (Sudoku, ISolverStrategy) SinglePlaceSolver_Dificil() => CombinationSolver.Solve(Sudokus.Difficult.Sudoku);
+        public (Sudoku, ISolverStrategy) SinglePlaceSolver_Dificil() => CombinationSolver.ExecuteSolve(Sudokus.Difficult.Sudoku);
 
         [Benchmark]
-        public (Sudoku, ISolverStrategy) Single_BruteForceSolver_Expert() => CombinationSolver.Solve(Sudokus.Expert.Sudoku);
+        public (Sudoku, ISolverStrategy) Single_BruteForceSolver_Expert() => CombinationSolver.ExecuteSolve(Sudokus.Expert.Sudoku);
 
         static void Main()
         {

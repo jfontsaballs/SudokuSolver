@@ -93,8 +93,8 @@ namespace SudokuSolver.Tests
                 9, 5, 8, 4, 2, 1, 6, 3, 7,
                 1, 6, 3, 7, 8, 5, 4, 9, 2));
 
-        public static void TestSudoku((Sudoku Sudoku, Sudoku Solved) sudoku, Func<Sudoku, Sudoku> solver)
-            => Assert.That(solver(sudoku.Sudoku), Is.EqualTo(sudoku.Solved));
+        public static void TestSudoku((Sudoku Sudoku, Sudoku Solved) solvedSudoku, Func<Sudoku, Sudoku> solver)
+            => Assert.That(solver(solvedSudoku.Sudoku), Is.EqualTo(solvedSudoku.Solved));
 
         public static void TestSudoku((Sudoku Sudoku, Sudoku Solved) solvedSudoku, ISolverStrategy expectedStrategy, Func<Sudoku, (Sudoku, ISolverStrategy)> solver)
         {
