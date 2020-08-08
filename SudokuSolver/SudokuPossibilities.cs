@@ -28,5 +28,18 @@ namespace SudokuSolver
                 return _possibilities = p;
             }
         }
+
+        private ImmutableArray<ImmutableArray<IEnumerable<int>>> updatePossibilities(int fila, int columna, int valor)
+        {
+            if (_possibilities.IsEmpty)
+                return ImmutableArray<ImmutableArray<IEnumerable<int>>>.Empty;
+
+            return _possibilities.ForEachPosition((f, c, possibilities, setter) => {
+                if (f == fila || c == columna || SudokuUtils.AreInSameSquare((f, c), (fila, columna)) && possibilities.Contains(valor))
+                    setter(possibilities.Except(new[] { valor }));
+            }).Set(fila, columna, Enumerable.Empty<int>());
+        }
+
+        public string PossibilitiesAsString => Possibilities.PrettyPrint(SudokuUtils.PrintSequence);
     }
 }

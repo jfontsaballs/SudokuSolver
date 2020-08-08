@@ -7,9 +7,9 @@ namespace SudokuSolver
     {
         public Sudoku Solve(Sudoku sudoku)
         {
-            return sudoku.ForEachEmpty((f, q) => {
+            return sudoku.ForEachEmpty((f, c) => {
                 try {
-                    return GetPossibilities(sudoku, f, q).Single();
+                    return sudoku.Possibilities.Get(f, c).Single();
                 }
                 catch {
                     return 0;

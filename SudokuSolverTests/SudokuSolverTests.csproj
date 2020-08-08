@@ -65,8 +65,8 @@
   <ItemGroup>
     <Compile Include="SolverTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SudokuExtensionsTests.cs" />
     <Compile Include="Sudokus.cs" />
+    <Compile Include="SudokuTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
